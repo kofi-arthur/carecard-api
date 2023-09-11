@@ -422,7 +422,9 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something Broke!')
 })
 
+const port = process.env.PORT || 3000;
+
 // listen
-app.listen(3000, () => {
-    console.log('Listening on 3000')
+app.listen(port, "0.0.0.0", () => {
+    console.log('Listening on port')
 })
