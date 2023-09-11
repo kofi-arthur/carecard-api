@@ -4,7 +4,7 @@
   "main": "node_modules/expo/AppEntry.js",
   "type": "module",
   "scripts": {
-    "start": "expo start",
+    "start": "node server.js",
     "dev": "npx nodemon server.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
