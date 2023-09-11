@@ -426,5 +426,5 @@ const port = process.env.PORT || 3000;
 
 // listen
 app.listen(port, "0.0.0.0", () => {
-    console.log('Listening on port')
+    console.log(`Listening on ${port}`)
 })
