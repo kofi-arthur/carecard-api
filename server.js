@@ -362,7 +362,7 @@ app.post("/createUser", (req, res) => {
 // add card
 app.post("/card", (req, res) => {
     const { id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time } = req.body
-    const query = 'INSERT INTO card (id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    const query = "INSERT INTO card (id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
 
     conn.query(query, [id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
         if (error) {
