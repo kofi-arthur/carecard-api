@@ -343,7 +343,7 @@ app.post('/confirmPassword', (req, res) => {
 // create user
 app.post("/createUser", (req, res) => {
     const { username, firstname, lastname, email, password, department } = req.body
-    const query = 'INSERT INTO users (username, firstname, lastname, email, password, department) VALUES (?, ?, ?, ?, ?, ?)'
+    const query = 'INSERT INTO users (username, firstname, lastname, email, password, department, code) VALUES (?, ?, ?, ?, ?, ?, '')'
 
     conn.query(query, [username, firstname, lastname, email, password, department], (error, result) => {
         if (error) {
