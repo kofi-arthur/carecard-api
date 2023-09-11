@@ -38,14 +38,14 @@ app.get('/sendCode/:email', (req, res) => {
 
     const messageBody = `
     <div style="text-align: center;">
-        <p style="margin-bottom: 0px;">
+        <p style="margin-bottom: 0px; font-size: 14px;">
         Hello, <br></br>
         Use the code below to proceed with resetting your password
         </p>
-        <h1 style="color: green;">
+        <h1 style="color: green; font-size: 24px;">
         ${code}
         </h1>
-        <p>If you did not mkae this request, kindly ignore this email.</P>
+        <p style="font-size: 14px;">If you did not mkae this request, kindly ignore this email.</P>
         <span style="font-size: 12px; opacity: .4">
         Care Card App
         </span>
