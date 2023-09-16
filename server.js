@@ -362,8 +362,8 @@ app.post("/createUser", (req, res) => {
 // add card
 app.post("/card", (req, res) => {
     const { id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time } = req.body
-    const query = 'INSERT INTO card (id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    const queryWithoutTitle = "INSERT INTO card (id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time) VALUES (?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    const query = "INSERT INTO card (id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
+    const queryWithoutTitle = "INSERT INTO card (id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
 
     if (title.trim() === '') {
         conn.query(queryWithoutTitle, [id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
