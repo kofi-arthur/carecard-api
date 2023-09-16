@@ -361,21 +361,37 @@ app.post("/createUser", (req, res) => {
 
 // add card
 app.post("/card", (req, res) => {
-    const { id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time } = req.body
-    const query = "INSERT INTO card (id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
+    const { id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time } = req.body
+    const query = 'INSERT INTO card (id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    const queryWithoutTitle = "INSERT INTO card (id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time) VALUES (?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
-    conn.query(query, [id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
-        if (error) {
-            console.log('Error executing query', error)
-            return res.status(500).json({ message: `Error executing query: ${error}` })
-        }
-        if (result.affectedRows === 0) {
-            console.log('Card not created')
-            return res.status(409).send({ message: 'Card not created' })
-        }
-        console.log('Card created successfully:', result)
-        return res.status(201).send(result)
-    })
+    if (title.trim() === '') {
+        conn.query(queryWithoutTitle, [id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
+            if (error) {
+                console.log('Error executing query', error)
+                return res.status(500).json({ message: `Error executing query: ${error}` })
+            }
+            if (result.affectedRows === 0) {
+                console.log('Card not created')
+                return res.status(409).send({ message: 'Card not created' })
+            }
+            console.log('Card created successfully:', result)
+            return res.status(201).send(result)
+        })
+    } else {
+        conn.query(query, [id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
+            if (error) {
+                console.log('Error executing query', error)
+                return res.status(500).json({ message: `Error executing query: ${error}` })
+            }
+            if (result.affectedRows === 0) {
+                console.log('Card not created')
+                return res.status(409).send({ message: 'Card not created' })
+            }
+            console.log('Card created successfully:', result)
+            return res.status(201).send(result)
+        })
+    }
 })
 
 // report a bug
