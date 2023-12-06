@@ -9,12 +9,10 @@ const app = express()
 app.use(express.json())
 
 const conn = mysql.createPool({
-    host: process.env.MYSQLHOST,
-    user: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQLDATABASE,
-    port: process.env.MYSQLPORT,
-    uri: process.env.MYSQL_URL
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE
 })
 
 const transporter = nodemailer.createTransport({
@@ -34,18 +32,19 @@ app.get('/sendCode/:email', (req, res) => {
 
     const email = req.params.email
     const query = 'UPDATE users SET code = ? WHERE email = ?'
-    const code = Math.floor(Math.random() * 900000) + 100000;
+    const code = Math.floor(Math.random() * 9000) + 1000;
 
     const messageBody = `
-    <div style="text-align: center;">
+    <div style="text-align: left;">
+        <h1>Verification Code</h1>
         <p style="margin-bottom: 0px; font-size: 14px;">
-        Hello, <br></br>
+        Hello, </br>
         Use the code below to proceed with resetting your password
         </p>
-        <h1 style="color: green; font-size: 24px;">
+        <h1 style="color: green; font-size: 32px; letter-spacing: 2px;">
         ${code}
         </h1>
-        <p style="font-size: 14px;">If you did not mkae this request, kindly ignore this email.</P>
+        <p style="font-size: 14px;">If you did not make this request, kindly ignore this email.</P>
         <span style="font-size: 12px; opacity: .4">
         Care Card App
         </span>
@@ -54,31 +53,28 @@ app.get('/sendCode/:email', (req, res) => {
     const mailOptions = {
         from: 'CareCard App <ace19dev@gmail.com>',
         to: email,
-        subject: 'Reset Code',
+        subject: 'Reset Verification Code',
         html: messageBody
     }
 
-    transporter.sendMail(mailOptions, (err, info) => {
+
+    conn.query(query, [code, email], (err, info) => {
         if (err) {
-            console.log('Error sending mail', err)
-            return res.status(500).json({ message: 'Error sending Mail' })
+            console.log('Error adding code to database', err)
+            return res.status(500).json({ message: 'Error executing query' })
+        } else if (info.affectedRows === 0) {
+            console.log("Invalid Email")
+            return res.status(404).json({ message: 'Email does not exist' })
         }
-
-        console.log('Email Sent', info.response)
-        conn.query(query, [code, email], (err, info) => {
+        transporter.sendMail(mailOptions, (err, info) => {
             if (err) {
-                console.log('Error', err)
-                res.status(500).json({ message: 'Error executing query' })
-            } else if (info.affectedRows === 0) {
-                console.log("Invalid Email")
-                res.status(404).json({ message: 'Email does not exist' })
+                console.log('Error sending mail', err)
+                return res.status(500).json({ message: 'Error sending Mail' })
             }
-            console.log('Code Added')
-            res.status(200).json({ message: 'Code Added' })
+            console.log('Email Sent', info.response)
+            return res.status(201).json({ message: 'Mail Sent' })
         })
-
     })
-
 })
 
 // confirm code
@@ -94,11 +90,9 @@ app.get('/confirmCode/:email/:code', (req, res) => {
         }
         const dbCode = info[0].code
         if (code !== dbCode) {
-            console.log('Incorrect Code')
-            res.status(424).json({ message: 'Incorrect Code' })
+            return res.status(424).json({ message: 'Incorrect Code' })
         }
-        console.log('Success')
-        res.status(202).json({ message: 'Success' })
+        return res.status(202).json({ message: 'Success' })
     })
 
 })
@@ -115,9 +109,8 @@ app.get('/user/:email', (req, res) => {
         }
         if (result.length === 0) {
             console.log('User does not exist')
-            return res.json({ message: 'Incorrect Email or Password' })
+            return res.json({ message: 'User Does Not Exist' })
         }
-        console.log('Data fetched successfully:', result[0])
         return res.send(result[0])
     })
 })
@@ -129,14 +122,12 @@ app.get('/pendingcard/:email', (req, res) => {
 
     conn.query(query, [email], (error, result) => {
         if (error) {
-            console.log('Error executinig query', error)
+            console.log('Error executing query', error)
             return res.status(500).json({ message: 'Error executing query' })
         }
         if (result.length === 0) {
-            console.log('No cards belonging to user here')
             return res.json({ message: 'No Cards Here' })
         }
-        console.log('Data fetched successfully:', result)
         return res.send(result)
     })
 })
@@ -152,10 +143,8 @@ app.get('/pendingcardnum/:email', (req, res) => {
             return res.status(500).json({ message: 'Error executing query' })
         }
         if (result.length === 0) {
-            console.log('No cards belonging to user here')
             return res.json({ message: 'No Cards Here' })
         }
-        console.log('Data fetched successfully:', result)
         return res.send(result)
     })
 })
@@ -171,10 +160,8 @@ app.get('/completedcards/:email', (req, res) => {
             return res.status(500).json({ message: 'Error executing query' })
         }
         if (result.length === 0) {
-            console.log('No cards belonging to user here')
             return res.json({ message: 'No Cards Here' })
         }
-        console.log('Data fetched successfully:', result)
         return res.send(result)
     })
 })
@@ -190,10 +177,8 @@ app.get('/completedcardnum/:email', (req, res) => {
             return res.status(500).json({ message: 'Error executing query' })
         }
         if (result.length === 0) {
-            console.log('No cards belonging to user here')
             return res.json({ message: 'No Cards Here' })
         }
-        console.log('Data fetched successfully:', result)
         return res.send(result)
     })
 })
@@ -209,15 +194,13 @@ app.get('/uncompletedcards/:email', (req, res) => {
             return res.status(500).json({ message: 'Error executing query' })
         }
         if (result.length === 0) {
-            console.log('No cards belonging to user here')
             return res.json({ message: 'No Cards Here' })
         }
-        console.log('Data fetched successfully:', result)
         return res.send(result)
     })
 })
 
-// get completed card number 
+// get uncompleted card number 
 app.get('/uncompletedcardnum/:email', (req, res) => {
     const email = req.params.email
     const query = "SELECT * FROM card WHERE email = ? AND status = 'Uncompleted'"
@@ -228,53 +211,88 @@ app.get('/uncompletedcardnum/:email', (req, res) => {
             return res.status(500).json({ message: 'Error executing query' })
         }
         if (result.length === 0) {
-            console.log('No cards belonging to user here')
             return res.json({ message: 'No Cards Here' })
         }
-        console.log('Data fetched successfully:', result)
         return res.send(result)
     })
 })
 
-// update username
-app.post('/user', (req, res) => {
-    const { email, username } = req.body
-    const query = 'UPDATE users SET username= ? WHERE email = ?'
+// login
+app.post('/login', (req, res) => {
+    const { email, password } = req.body
+    const query = 'SELECT * FROM users WHERE email = ?'
 
-    conn.query(query, [username, email], (error, result) => {
-        if (error) {
-            console.log('Error executinig query')
+    conn.query(query, [email], (err, info) => {
+        if (err) {
+            console.log('error executing query', err)
             return res.status(500).json({ message: 'Error executing query' })
+        } if (info.length === 0) {
+            console.log('user does not exist')
+            return res.json({ message: 'User Does Not Exist' })
         }
-        if (result.affectedRows === 0) {
-            console.log('Username not updated')
-            return res.status(409).send({ message: 'Username not updated' })
+        const dbPassword = info[0].password
+        bcrypt.compare(password, dbPassword, (bErr, bPass) => {
+            if (bErr) {
+                console.log('error decryoting password')
+                return res.json({ message: 'Error decrypting password' })
+            } if (!bPass) {
+                return res.json({ message: 'Incorrect Password' })
+            }
+            return res.json({ message: info[0] })
+        })
+    })
+})
+
+// update username
+app.post('/changeUsername', (req, res) => {
+    const { email, username } = req.body
+    const query = 'UPDATE users SET username = ? WHERE email = ?'
+
+    conn.query(query, [username, email], (err, success) => {
+        if (err) {
+            console.log('Error exectuing query', err)
+            return res.status(500).json({ message: 'Error Executing Query' })
         }
-        console.log('Username updated successfuly:', result)
-        return res.send(result)
+        return res.status(201).json({ messasge: 'Success', success })
     })
 })
 
 // update password
 app.post('/changePassword', (req, res) => {
-    const { email, password } = req.body
+    const { email, oldPassword, password } = req.body
+    const fetchQuery = 'SELECT password from users WHERE email = ?'
     const query = 'UPDATE users SET password = ? WHERE email = ?'
     const salt = 13
 
-    bcrypt.hash(password, salt, (error, result) => {
-        if (error) {
-            console.log('Error hashing password:', err)
-            return res.status(500).json({ message: 'Error hashing password' })
+    conn.query(fetchQuery, email, (err, info) => {
+        if (err) {
+            console.log('Error exectuing query', err)
+            return res.status(500).json({ message: 'Error Executing Query' })
         }
-        console.log('Password Hashesd:', result)
-        conn.query(query, [result, email], (err, success) => {
-            if (err) {
-                console.log('Error exectuing query', err)
-                return res.status(500).json({ message: 'Error Executing Query' })
+        const dbPassword = info[0].password
+        bcrypt.compare(oldPassword, dbPassword, (error, result) => {
+            if (error) {
+                console.log('error decrypting password', error)
+                return res.status(500).json({ message: 'Error Decrypting Password' })
             }
-            console.log('Success', success)
-            return res.status(201).json({ messasge: 'Succes', success })
+            if (!result) {
+                return res.status(500).json({ message: 'Wrong Password' })
+            }
+            bcrypt.hash(password, salt, (fail, pass) => {
+                if (fail) {
+                    console.log('Error hashing password:', fail)
+                    return res.status(500).json({ message: 'Error hashing password' })
+                }
+                conn.query(query, [pass, email], (errMsg, success) => {
+                    if (errMsg) {
+                        console.log('Error exectuing query', errMsg)
+                        return res.status(500).json({ message: 'Error Executing Query' })
+                    }
+                    return res.status(201).json({ messasge: 'Success', success })
+                })
+            })
         })
+
     })
 })
 
@@ -342,20 +360,39 @@ app.post('/confirmPassword', (req, res) => {
 
 // create user
 app.post("/createUser", (req, res) => {
-    const { username, firstname, lastname, email, password, department } = req.body
-    const query = "INSERT INTO users (username, firstname, lastname, email, password, department, code) VALUES (?, ?, ?, ?, ?, ?, '')"
 
-    conn.query(query, [username, firstname, lastname, email, password, department], (error, result) => {
-        if (error) {
-            console.log('Error executing query', error)
+    const { username, firstname, lastname, email, password, department, designation } = req.body
+    const checkQuery = 'SELECT * FROM users WHERE email = ?'
+    const query = 'INSERT INTO users (username, firstname, lastname, email, password, department, designation) VALUES (?, ?, ?, ?, ?, ?, ?)'
+
+    conn.query(checkQuery, email, (qErr, qInfo) => {
+        if (qErr) {
+            console.log('error executing query', qErr)
             return res.status(500).json({ message: 'Error executing query' })
         }
-        if (result.affectedRows === 0) {
-            console.log('User not created')
-            return res.status(409).send({ message: 'User not created' })
+        if (qInfo.length > 0) {
+            console.log('User exists')
+            return res.status(409).json({ message: 'User exists' })
         }
-        console.log('User created successfully:', result);
-        return res.status(201).send(result);
+
+        bcrypt.hash(password, 13, (bErr, encrypted) => {
+            if (bErr) {
+                console.log('error hashing password', bErr)
+                return res.status(500).json({ message: 'Error hashing password' })
+            }
+            console.log('Success')
+            conn.query(query, [username, firstname, lastname, email, encrypted, department, designation], (error, result) => {
+                if (error) {
+                    console.log('Error executing query', error)
+                    return res.status(500).json({ message: 'Error executing query' })
+                }
+                if (result.affectedRows === 0) {
+                    console.log('User not created')
+                    return res.status(409).json({ message: 'User not created' })
+                }
+                return res.status(201).json({ message: result })
+            })
+        })
     })
 })
 
@@ -363,32 +400,29 @@ app.post("/createUser", (req, res) => {
 app.post("/card", (req, res) => {
     const { id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time } = req.body
     const query = "INSERT INTO card (id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
-    const queryWithoutTitle = "INSERT INTO card (id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
-
-    if (title.trim() === '') {
+    const queryWithoutTitle = "INSERT INTO card (id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
+    if (title === '') {
         conn.query(queryWithoutTitle, [id, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
             if (error) {
                 console.log('Error executing query', error)
-                return res.status(500).json({ message: `Error executing query: ${error}` })
+                return res.status(500).json({ message: `Error executing query` })
             }
             if (result.affectedRows === 0) {
                 console.log('Card not created')
                 return res.status(409).send({ message: 'Card not created' })
             }
-            console.log('Card created successfully:', result)
             return res.status(201).send(result)
         })
     } else {
         conn.query(query, [id, title, name, email, department, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
             if (error) {
                 console.log('Error executing query', error)
-                return res.status(500).json({ message: `Error executing query: ${error}` })
+                return res.status(500).json({ message: `Error executing query` })
             }
             if (result.affectedRows === 0) {
                 console.log('Card not created')
                 return res.status(409).send({ message: 'Card not created' })
             }
-            console.log('Card created successfully:', result)
             return res.status(201).send(result)
         })
     }
@@ -438,9 +472,8 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something Broke!')
 })
 
-const port = process.env.PORT || 3000;
-
 // listen
-app.listen(port, "0.0.0.0", () => {
+const port = process.env.PORT
+app.listen(port, () => {
     console.log(`Listening on ${port}`)
 })
