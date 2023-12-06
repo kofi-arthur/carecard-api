@@ -257,6 +257,28 @@ app.post('/changeUsername', (req, res) => {
     })
 })
 
+// reset password
+app.post('/resetPassword', (req, res) => {
+    const { email, password } = req.body
+    const query = 'UPDATE users SET password = ? WHERE email = ?'
+    const salt = 13
+
+    bcrypt.hash(password, salt, (fail, pass) => {
+        if (fail) {
+            console.log('Error hashing password:', fail)
+            return res.status(500).json({ message: 'Error hashing password' })
+        }
+        conn.query(query, [pass, email], (errMsg, success) => {
+            if (errMsg) {
+                console.log('Error exectuing query', errMsg)
+                return res.status(500).json({ message: 'Error Executing Query' })
+            }
+            return res.status(201).json({ messasge: 'Success', success })
+        })
+    })
+
+})
+
 // update password
 app.post('/changePassword', (req, res) => {
     const { email, oldPassword, password } = req.body
@@ -398,11 +420,11 @@ app.post("/createUser", (req, res) => {
 
 // add card
 app.post("/card", (req, res) => {
-    const { id, title, name, email, department, designation, location, observationType, observation, description, actionTaken, suggestion, date, time } = req.body
-    const query = "INSERT INTO card (id, title, name, email, department, designation, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
-    const queryWithoutTitle = "INSERT INTO card (id, name, email, department, designation, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
+    const { id, title, name, email, department, designation, country, location, observationType, observation, description, actionTaken, suggestion, date, time } = req.body
+    const query = "INSERT INTO card (id, title, name, email, department, designation, country, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
+    const queryWithoutTitle = "INSERT INTO card (id, name, email, department, designation, country, location, observationType, observation, description, actionTaken, suggestion, status, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)"
     if (title === '') {
-        conn.query(queryWithoutTitle, [id, name, email, department, designation, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
+        conn.query(queryWithoutTitle, [id, name, email, department, designation, country, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
             if (error) {
                 console.log('Error executing query', error)
                 return res.status(500).json({ message: `Error executing query` })
@@ -414,7 +436,7 @@ app.post("/card", (req, res) => {
             return res.status(201).send(result)
         })
     } else {
-        conn.query(query, [id, title, name, email, department, designation, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
+        conn.query(query, [id, title, name, email, department, designation, country, location, observationType, observation, description, actionTaken, suggestion, date, time], (error, result) => {
             if (error) {
                 console.log('Error executing query', error)
                 return res.status(500).json({ message: `Error executing query` })
